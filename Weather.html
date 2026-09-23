@@ -1,0 +1,3524 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <!-- =====================================================
+         BASIC HTML SETTINGS
+    ====================================================== -->
+
+    <!-- Defines the character encoding -->
+    <meta charset="UTF-8">
+
+    <!-- Makes the website responsive on mobile/tablet -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Title displayed in the browser tab -->
+    <title>Weather Analytics Dashboard</title>
+
+
+    <!-- =====================================================
+         CHART.JS LIBRARY
+         Used to create precipitation and temperature charts
+    ====================================================== -->
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <!-- =====================================================
+         CSS SECTION
+    ====================================================== -->
+
+    <style>
+
+        /* -----------------------------------------------------
+           GLOBAL RESET
+           Removes default browser spacing
+        ----------------------------------------------------- */
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+
+        /* -----------------------------------------------------
+           BODY
+           Main background of the dashboard
+        ----------------------------------------------------- */
+
+        body {
+
+            min-height: 100vh;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #eaf4ff,
+                    #f7fbff,
+                    #edf6ff
+                );
+
+            color: #17234d;
+        }
+
+
+        /* -----------------------------------------------------
+           MAIN DASHBOARD LAYOUT
+
+           85px  = Sidebar
+           1fr    = Main content
+           320px  = Right panel
+        ----------------------------------------------------- */
+
+        .dashboard {
+
+            display: grid;
+
+            grid-template-columns:
+                85px 1fr 320px;
+
+            min-height: 100vh;
+        }
+
+
+        /* =====================================================
+           LEFT SIDEBAR
+        ====================================================== */
+
+        .sidebar {
+
+            background:
+                rgba(255,255,255,0.82);
+
+            backdrop-filter: blur(20px);
+
+            padding: 25px 13px;
+
+            border-right:
+                1px solid rgba(255,255,255,0.8);
+
+            display: flex;
+
+            flex-direction: column;
+
+            align-items: center;
+        }
+
+
+        /* Dashboard logo */
+
+        .logo {
+
+            width: 52px;
+            height: 52px;
+
+            border-radius: 16px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #247cff,
+                    #65c1ff
+                );
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 27px;
+
+            margin-bottom: 45px;
+
+            box-shadow:
+                0 8px 20px
+                rgba(36,124,255,0.25);
+        }
+
+
+        /* Sidebar navigation container */
+
+        .nav {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 18px;
+
+            width: 100%;
+        }
+
+
+        /* Individual sidebar buttons */
+
+        .nav-item {
+
+            width: 100%;
+            height: 52px;
+
+            border-radius: 15px;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 21px;
+
+            color: #73819d;
+
+            cursor: pointer;
+
+            transition: 0.3s;
+        }
+
+
+        /* Hover and active navigation button */
+
+        .nav-item:hover,
+        .nav-item.active {
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #247cff,
+                    #54a9ff
+                );
+
+            color: white;
+
+            box-shadow:
+                0 8px 20px
+                rgba(36,124,255,0.25);
+        }
+
+
+        /* =====================================================
+           MAIN CONTENT
+        ====================================================== */
+
+        .main {
+
+            padding: 28px;
+
+            overflow: hidden;
+        }
+
+
+        /* =====================================================
+           TOP BAR
+        ====================================================== */
+
+        .topbar {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                center;
+
+            margin-bottom: 25px;
+        }
+
+
+        /* Search box */
+
+        .search {
+
+            width: 55%;
+
+            position: relative;
+        }
+
+
+        /* Search input */
+
+        .search input {
+
+            width: 100%;
+
+            padding:
+                17px 60px 17px 22px;
+
+            border: none;
+
+            outline: none;
+
+            border-radius: 17px;
+
+            background:
+                rgba(255,255,255,0.9);
+
+            box-shadow:
+                0 8px 25px
+                rgba(43,75,120,0.08);
+
+            font-size: 15px;
+        }
+
+
+        /* Search button */
+
+        .search button {
+
+            position: absolute;
+
+            right: 7px;
+
+            top: 7px;
+
+            width: 44px;
+
+            height: 44px;
+
+            border: none;
+
+            border-radius: 13px;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #247cff,
+                    #4da7ff
+                );
+
+            color: white;
+
+            font-size: 18px;
+
+            cursor: pointer;
+        }
+
+
+        /* User profile section */
+
+        .profile {
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 15px;
+
+            font-weight: 600;
+        }
+
+
+        /* Profile circle */
+
+        .avatar {
+
+            width: 50px;
+            height: 50px;
+
+            border-radius: 50%;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #247cff,
+                    #76c7ff
+                );
+
+            color: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-weight: bold;
+        }
+
+
+        /* =====================================================
+           GREETING SECTION
+        ====================================================== */
+
+        .greeting {
+
+            margin-bottom: 20px;
+        }
+
+
+        .greeting h1 {
+
+            font-size: 30px;
+
+            color: #101d4c;
+        }
+
+
+        .greeting p {
+
+            color: #7c89a3;
+
+            margin-top: 6px;
+        }
+
+
+        /* =====================================================
+           MAIN WEATHER HERO CARD
+        ====================================================== */
+
+        .hero {
+
+            position: relative;
+
+            overflow: hidden;
+
+            min-height: 305px;
+
+            border-radius: 28px;
+
+            padding: 30px;
+
+            color: white;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    #1473e6,
+                    #3b9bea 55%,
+                    #79c9f2
+                );
+
+            box-shadow:
+                0 15px 35px
+                rgba(32,107,190,0.25);
+        }
+
+
+        /* Decorative circle in hero card */
+
+        .hero::before {
+
+            content: "";
+
+            position: absolute;
+
+            width: 350px;
+            height: 350px;
+
+            background:
+                rgba(255,255,255,0.10);
+
+            border-radius: 50%;
+
+            right: -100px;
+
+            top: -170px;
+        }
+
+
+        /* Hero content */
+
+        .hero-content {
+
+            position: relative;
+
+            z-index: 2;
+
+            display: flex;
+
+            justify-content:
+                space-between;
+        }
+
+
+        /* Location section */
+
+        .hero-left h2 {
+
+            font-size: 20px;
+
+            margin-bottom: 15px;
+        }
+
+
+        /* Current temperature */
+
+        .temperature {
+
+            font-size: 78px;
+
+            font-weight: 700;
+
+            line-height: 1;
+        }
+
+
+        /* Weather condition */
+
+        .condition {
+
+            font-size: 22px;
+
+            margin-top: 12px;
+        }
+
+
+        /* Feels-like temperature */
+
+        .feels {
+
+            margin-top: 7px;
+
+            opacity: 0.85;
+        }
+
+
+        /* Large weather icon */
+
+        .hero-weather-icon {
+
+            font-size: 115px;
+
+            margin-right: 35px;
+        }
+
+
+        /* Weather details at bottom */
+
+        .hero-details {
+
+            position: absolute;
+
+            z-index: 5;
+
+            right: 30px;
+
+            bottom: 25px;
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(2,120px);
+
+            gap: 10px;
+        }
+
+
+        /* Individual weather detail */
+
+        .hero-detail {
+
+            background:
+                rgba(255,255,255,0.14);
+
+            padding: 11px;
+
+            border-radius: 12px;
+
+            backdrop-filter:
+                blur(10px);
+        }
+
+
+        .hero-detail span {
+
+            display: block;
+
+            font-size: 12px;
+
+            opacity: 0.8;
+        }
+
+
+        .hero-detail strong {
+
+            font-size: 15px;
+        }
+
+
+        /* =====================================================
+           7-DAY FORECAST
+        ====================================================== */
+
+        .forecast {
+
+            display: grid;
+
+            grid-template-columns:
+                repeat(7,1fr);
+
+            gap: 12px;
+
+            margin-top: 20px;
+        }
+
+
+        /* Forecast card */
+
+        .forecast-card {
+
+            background:
+                rgba(255,255,255,0.88);
+
+            border-radius: 18px;
+
+            padding: 16px 7px;
+
+            text-align: center;
+
+            box-shadow:
+                0 7px 20px
+                rgba(50,80,120,0.06);
+
+            transition: 0.3s;
+        }
+
+
+        /* Card hover animation */
+
+        .forecast-card:hover {
+
+            transform:
+                translateY(-5px);
+        }
+
+
+        /* Highlight today's forecast */
+
+        .forecast-card.today {
+
+            border:
+                2px solid #3d95ff;
+
+            box-shadow:
+                0 8px 22px
+                rgba(64,149,255,0.15);
+        }
+
+
+        .forecast-day {
+
+            font-weight: 700;
+
+            font-size: 14px;
+        }
+
+
+        .forecast-date {
+
+            color: #8995ad;
+
+            font-size: 11px;
+
+            margin-top: 4px;
+        }
+
+
+        .forecast-icon {
+
+            font-size: 37px;
+
+            margin: 12px 0;
+        }
+
+
+        /* Maximum temperature */
+
+        .forecast-temp {
+
+            font-weight: bold;
+
+            color: #ff6826;
+        }
+
+
+        /* Minimum temperature */
+
+        .forecast-min {
+
+            color: #7c8aa5;
+
+            font-size: 13px;
+        }
+
+
+        /* =====================================================
+           ANALYTICS SECTION
+        ====================================================== */
+
+        .analytics-grid {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 20px;
+
+            margin-top: 20px;
+        }
+
+
+        /* Analytics card */
+
+        .analytics-card {
+
+            background:
+                rgba(255,255,255,0.9);
+
+            border-radius: 22px;
+
+            padding: 24px;
+
+            box-shadow:
+                0 8px 25px
+                rgba(50,80,120,0.07);
+        }
+
+
+        /* Analytics card heading */
+
+        .analytics-header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            align-items:
+                flex-start;
+
+            margin-bottom: 15px;
+        }
+
+
+        .analytics-header h3 {
+
+            font-size: 18px;
+        }
+
+
+        .analytics-header p {
+
+            color: #8a96ab;
+
+            font-size: 13px;
+
+            margin-top: 5px;
+        }
+
+
+        /* Chart size */
+
+        .chart-container {
+
+            height: 260px;
+
+            position: relative;
+        }
+
+
+        /* Small unit badge */
+
+        .chart-badge {
+
+            background:
+                #edf5ff;
+
+            color:
+                #247cff;
+
+            padding:
+                7px 12px;
+
+            border-radius:
+                10px;
+
+            font-size:
+                12px;
+
+            font-weight:
+                bold;
+        }
+
+
+        /* =====================================================
+           SUNRISE / SUNSET TIMELINE
+        ====================================================== */
+
+        .sun-timeline {
+
+            padding-top: 10px;
+        }
+
+
+        /* Sunrise and sunset labels */
+
+        .sun-time {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            color: #72819c;
+
+            font-size: 13px;
+        }
+
+
+        .sun-time strong {
+
+            color: #17234d;
+        }
+
+
+        /* Timeline background */
+
+        .timeline {
+
+            height: 55px;
+
+            position: relative;
+
+            margin:
+                32px 0 8px;
+
+            border-radius: 30px;
+
+            background:
+                #19254c;
+
+            overflow: visible;
+        }
+
+
+        /* Yellow daylight portion */
+
+        .daylight {
+
+            position: absolute;
+
+            height: 100%;
+
+            top: 0;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #ffd45a,
+                    #fff0a6,
+                    #ffd45a
+                );
+
+            border-radius: 30px;
+        }
+
+
+        /* Sunrise and sunset markers */
+
+        .sun-marker {
+
+            position: absolute;
+
+            top: -15px;
+
+            width: 48px;
+
+            height: 48px;
+
+            border-radius: 50%;
+
+            background: white;
+
+            display: flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            font-size: 24px;
+
+            box-shadow:
+                0 5px 15px
+                rgba(0,0,0,0.15);
+
+            z-index: 10;
+
+            transform:
+                translateX(-50%);
+        }
+
+
+        /* Timeline hours */
+
+        .timeline-hours {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            color:
+                #8995aa;
+
+            font-size:
+                11px;
+
+            margin-top:
+                12px;
+        }
+
+
+        /* Daylight and night summary */
+
+        .day-summary {
+
+            display: grid;
+
+            grid-template-columns:
+                1fr 1fr;
+
+            gap: 10px;
+
+            margin-top: 22px;
+        }
+
+
+        .day-summary div {
+
+            background:
+                #f3f8ff;
+
+            border-radius:
+                14px;
+
+            padding:
+                13px;
+
+            color:
+                #71809a;
+
+            font-size:
+                12px;
+        }
+
+
+        .day-summary strong {
+
+            display: block;
+
+            color:
+                #18244d;
+
+            font-size:
+                17px;
+
+            margin-top:
+                4px;
+        }
+
+
+        /* =====================================================
+           RIGHT PANEL
+        ====================================================== */
+
+        .right-panel {
+
+            background:
+                rgba(255,255,255,0.75);
+
+            backdrop-filter:
+                blur(20px);
+
+            padding:
+                28px 22px;
+
+            border-left:
+                1px solid
+                rgba(255,255,255,0.7);
+        }
+
+
+        /* Right panel cards */
+
+        .date-card,
+        .calendar,
+        .right-forecast {
+
+            background: white;
+
+            border-radius: 20px;
+
+            padding: 20px;
+
+            margin-bottom: 18px;
+
+            box-shadow:
+                0 8px 20px
+                rgba(40,70,110,0.06);
+        }
+
+
+        .date-card p {
+
+            color:
+                #7e8ba3;
+
+            margin-top:
+                5px;
+
+            font-size:
+                13px;
+        }
+
+
+        /* =====================================================
+           CALENDAR
+        ====================================================== */
+
+        .calendar-header {
+
+            display: flex;
+
+            justify-content:
+                space-between;
+
+            margin-bottom:
+                18px;
+
+            font-weight:
+                bold;
+        }
+
+
+        .calendar-grid {
+
+            display:
+                grid;
+
+            grid-template-columns:
+                repeat(7,1fr);
+
+            gap: 7px;
+
+            text-align:
+                center;
+        }
+
+
+        .calendar-grid div {
+
+            padding:
+                6px 0;
+
+            font-size:
+                12px;
+        }
+
+
+        /* Weekday names */
+
+        .calendar-day-name {
+
+            color:
+                #8793aa;
+
+            font-weight:
+                bold;
+        }
+
+
+        /* Highlight today's date */
+
+        .calendar-today {
+
+            background:
+                #247cff;
+
+            color:
+                white !important;
+
+            border-radius:
+                50%;
+        }
+
+
+        /* =====================================================
+           RIGHT-SIDE FORECAST
+        ====================================================== */
+
+        .right-forecast h3 {
+
+            margin-bottom:
+                12px;
+        }
+
+
+        .forecast-row {
+
+            display:
+                flex;
+
+            align-items:
+                center;
+
+            justify-content:
+                space-between;
+
+            padding:
+                12px 0;
+
+            border-bottom:
+                1px solid
+                #eef2f7;
+        }
+
+
+        .forecast-row:last-child {
+
+            border-bottom:
+                none;
+        }
+
+
+        .forecast-row-icon {
+
+            font-size:
+                27px;
+        }
+
+
+        .forecast-row-info {
+
+            flex: 1;
+
+            margin-left:
+                12px;
+        }
+
+
+        .forecast-row-info strong {
+
+            display:
+                block;
+
+            font-size:
+                13px;
+        }
+
+
+        .forecast-row-info small {
+
+            color:
+                #8995aa;
+        }
+
+
+        .forecast-row-temp {
+
+            color:
+                #ff6826;
+
+            font-weight:
+                bold;
+
+            font-size:
+                13px;
+        }
+
+
+        /* =====================================================
+           RESPONSIVE DESIGN
+        ====================================================== */
+
+        /* For medium-sized screens */
+
+        @media(max-width:1200px) {
+
+            .dashboard {
+
+                grid-template-columns:
+                    75px 1fr;
+            }
+
+            /* Hide right panel */
+
+            .right-panel {
+
+                display:
+                    none;
+            }
+
+        }
+
+
+        /* For tablets */
+
+        @media(max-width:850px) {
+
+            .dashboard {
+
+                display:
+                    block;
+            }
+
+            /* Hide sidebar */
+
+            .sidebar {
+
+                display:
+                    none;
+            }
+
+            .main {
+
+                padding:
+                    20px;
+            }
+
+            .forecast {
+
+                grid-template-columns:
+                    repeat(3,1fr);
+            }
+
+            .analytics-grid {
+
+                grid-template-columns:
+                    1fr;
+            }
+
+        }
+
+
+        /* For mobile devices */
+
+        @media(max-width:600px) {
+
+            .topbar {
+
+                display:
+                    block;
+            }
+
+            .search {
+
+                width:
+                    100%;
+
+                margin-bottom:
+                    15px;
+            }
+
+            .hero {
+
+                min-height:
+                    420px;
+            }
+
+            .hero-weather-icon {
+
+                position:
+                    absolute;
+
+                right:
+                    10px;
+
+                top:
+                    40px;
+
+                font-size:
+                    70px;
+            }
+
+            .temperature {
+
+                font-size:
+                    60px;
+            }
+
+            .hero-details {
+
+                position:
+                    absolute;
+
+                left:
+                    25px;
+
+                right:
+                    25px;
+
+                grid-template-columns:
+                    repeat(2,1fr);
+            }
+
+            .forecast {
+
+                grid-template-columns:
+                    repeat(2,1fr);
+            }
+
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+<!-- =========================================================
+     MAIN DASHBOARD CONTAINER
+========================================================== -->
+
+<div class="dashboard">
+
+
+    <!-- =====================================================
+         LEFT SIDEBAR
+    ====================================================== -->
+
+    <aside class="sidebar">
+
+        <!-- Website logo -->
+
+        <div class="logo">
+            ☁️
+        </div>
+
+
+        <!-- Navigation menu -->
+
+        <div class="nav">
+
+            <div class="nav-item active">
+                🏠
+            </div>
+
+            <div class="nav-item">
+                📊
+            </div>
+
+            <div class="nav-item">
+                💨
+            </div>
+
+            <div class="nav-item">
+                📍
+            </div>
+
+            <div class="nav-item">
+                ⚙️
+            </div>
+
+        </div>
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         MAIN CONTENT AREA
+    ====================================================== -->
+
+    <main class="main">
+
+
+        <!-- =================================================
+             TOP BAR
+        ================================================== -->
+
+        <div class="topbar">
+
+
+            <!-- City search box -->
+
+            <div class="search">
+
+                <input
+                    type="text"
+                    id="cityInput"
+                    value="Greater Noida"
+                    placeholder="Enter a city or place..."
+                >
+
+
+                <!-- Search button -->
+
+                <button
+                    onclick="loadWeather()"
+                >
+                    🔍
+                </button>
+
+            </div>
+
+
+            <!-- User/location information -->
+
+            <div class="profile">
+
+                <span id="topLocation">
+                    📍 Greater Noida, India
+                </span>
+
+                <div class="avatar">
+                    SS
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             GREETING
+        ================================================== -->
+
+        <div class="greeting">
+
+            <h1>
+                👋 Hello, Soumya Saha
+            </h1>
+
+            <p>
+                Here's your latest weather update
+            </p>
+
+        </div>
+
+
+
+        <!-- =================================================
+             CURRENT WEATHER HERO CARD
+        ================================================== -->
+
+        <div class="hero">
+
+
+            <div class="hero-content">
+
+
+                <!-- Weather information -->
+
+                <div class="hero-left">
+
+                    <h2>
+
+                        📍
+
+                        <span id="heroLocation">
+                            Greater Noida, India
+                        </span>
+
+                    </h2>
+
+
+                    <!-- Current temperature -->
+
+                    <div
+                        class="temperature"
+                        id="temperature"
+                    >
+                        --
+                    </div>
+
+
+                    <!-- Current weather condition -->
+
+                    <div
+                        class="condition"
+                        id="condition"
+                    >
+                        Loading...
+                    </div>
+
+
+                    <!-- Feels-like temperature -->
+
+                    <div
+                        class="feels"
+                        id="feels"
+                    >
+                        Feels like --
+                    </div>
+
+                </div>
+
+
+                <!-- Dynamic weather icon -->
+
+                <div
+                    class="hero-weather-icon"
+                    id="heroIcon"
+                >
+                    🌤️
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 WEATHER DETAILS
+            ============================================== -->
+
+            <div class="hero-details">
+
+
+                <!-- Humidity -->
+
+                <div class="hero-detail">
+
+                    <span>
+                        💧 Humidity
+                    </span>
+
+                    <strong id="humidity">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <!-- Wind speed -->
+
+                <div class="hero-detail">
+
+                    <span>
+                        💨 Wind
+                    </span>
+
+                    <strong id="wind">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <!-- Atmospheric pressure -->
+
+                <div class="hero-detail">
+
+                    <span>
+                        ⏱ Pressure
+                    </span>
+
+                    <strong id="pressure">
+                        --
+                    </strong>
+
+                </div>
+
+
+                <!-- Visibility -->
+
+                <div class="hero-detail">
+
+                    <span>
+                        👁 Visibility
+                    </span>
+
+                    <strong id="visibility">
+                        --
+                    </strong>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             7-DAY WEATHER FORECAST
+        ================================================== -->
+
+        <div
+            class="forecast"
+            id="forecast"
+        >
+            <!-- Forecast cards are created using JavaScript -->
+        </div>
+
+
+
+        <!-- =================================================
+             ANALYTICS SECTION
+        ================================================== -->
+
+        <div class="analytics-grid">
+
+
+            <!-- =============================================
+                 PRECIPITATION BAR CHART
+            ============================================== -->
+
+            <div class="analytics-card">
+
+
+                <div class="analytics-header">
+
+                    <div>
+
+                        <h3>
+                            🌧️ Today's Precipitation
+                        </h3>
+
+                        <p>
+                            Hourly precipitation level
+                        </p>
+
+                    </div>
+
+
+                    <div class="chart-badge">
+                        mm
+                    </div>
+
+                </div>
+
+
+                <!-- Chart.js canvas -->
+
+                <div class="chart-container">
+
+                    <canvas
+                        id="precipitationChart"
+                    ></canvas>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 TEMPERATURE LINE CHART
+            ============================================== -->
+
+            <div class="analytics-card">
+
+
+                <div class="analytics-header">
+
+                    <div>
+
+                        <h3>
+                            🌡️ Today's Temperature
+                        </h3>
+
+                        <p>
+                            Hourly temperature trend
+                        </p>
+
+                    </div>
+
+
+                    <div class="chart-badge">
+                        °C
+                    </div>
+
+                </div>
+
+
+                <!-- Chart.js canvas -->
+
+                <div class="chart-container">
+
+                    <canvas
+                        id="temperatureChart"
+                    ></canvas>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 SUNRISE / SUNSET TIMELINE
+            ============================================== -->
+
+            <div class="analytics-card">
+
+
+                <div class="analytics-header">
+
+                    <div>
+
+                        <h3>
+                            🌅 Sun Timeline
+                        </h3>
+
+                        <p>
+                            Sunrise and sunset today
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="sun-timeline">
+
+
+                    <!-- Sunrise time -->
+
+                    <div class="sun-time">
+
+                        <span>
+                            🌅 Sunrise
+                        </span>
+
+                        <strong
+                            id="timelineSunrise"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Timeline -->
+
+                    <div class="timeline">
+
+
+                        <!-- Yellow daylight section -->
+
+                        <div
+                            class="daylight"
+                            id="daylightBar"
+                        >
+                        </div>
+
+
+                        <!-- Sunrise marker -->
+
+                        <div
+                            class="sun-marker"
+                            id="sunriseMarker"
+                        >
+                            🌅
+                        </div>
+
+
+                        <!-- Sunset marker -->
+
+                        <div
+                            class="sun-marker"
+                            id="sunsetMarker"
+                        >
+                            🌇
+                        </div>
+
+                    </div>
+
+
+                    <!-- Timeline hour labels -->
+
+                    <div class="timeline-hours">
+
+                        <span>12 AM</span>
+
+                        <span>6 AM</span>
+
+                        <span>12 PM</span>
+
+                        <span>6 PM</span>
+
+                        <span>12 AM</span>
+
+                    </div>
+
+
+                    <!-- Sunset time -->
+
+                    <div
+                        class="sun-time"
+                        style="margin-top:20px;"
+                    >
+
+                        <span>
+                            🌇 Sunset
+                        </span>
+
+                        <strong
+                            id="timelineSunset"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Day/night duration -->
+
+                    <div class="day-summary">
+
+
+                        <div>
+
+                            ☀️ Daylight
+
+                            <strong
+                                id="timelineDayLength"
+                            >
+                                --
+                            </strong>
+
+                        </div>
+
+
+                        <div>
+
+                            🌙 Night
+
+                            <strong
+                                id="timelineNightLength"
+                            >
+                                --
+                            </strong>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =============================================
+                 LOCATION INFORMATION
+            ============================================== -->
+
+            <div class="analytics-card">
+
+
+                <div class="analytics-header">
+
+                    <div>
+
+                        <h3>
+                            📍 Location Information
+                        </h3>
+
+                        <p>
+                            Selected location details
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div class="day-summary">
+
+
+                    <!-- Latitude -->
+
+                    <div>
+
+                        Latitude
+
+                        <strong
+                            id="latitude"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Longitude -->
+
+                    <div>
+
+                        Longitude
+
+                        <strong
+                            id="longitude"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Time zone -->
+
+                    <div>
+
+                        Time Zone
+
+                        <strong
+                            id="timezone"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+
+                    <!-- Weather code -->
+
+                    <div>
+
+                        Weather Code
+
+                        <strong
+                            id="weatherCode"
+                        >
+                            --
+                        </strong>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         RIGHT SIDE PANEL
+    ====================================================== -->
+
+    <aside class="right-panel">
+
+
+        <!-- =================================================
+             DATE AND TIME CARD
+        ================================================== -->
+
+        <div class="date-card">
+
+            <h3 id="currentDate">
+                --
+            </h3>
+
+            <p id="currentTime">
+                --
+            </p>
+
+
+            <div
+                style="
+                    margin-top:15px;
+                    padding:14px;
+                    background:#f1f7ff;
+                    border-radius:13px;
+                "
+            >
+
+                ☀️
+
+                <strong>
+                    Good Weather, Good Mood
+                </strong>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             CALENDAR
+        ================================================== -->
+
+        <div class="calendar">
+
+
+            <!-- Current month -->
+
+            <div
+                class="calendar-header"
+                id="calendarMonth"
+            >
+                --
+            </div>
+
+
+            <!-- Calendar dates are generated using JavaScript -->
+
+            <div
+                class="calendar-grid"
+                id="calendar"
+            >
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             RIGHT SIDE 7-DAY FORECAST
+        ================================================== -->
+
+        <div class="right-forecast">
+
+            <h3>
+                7-Day Forecast
+            </h3>
+
+
+            <!-- Forecast rows generated by JavaScript -->
+
+            <div
+                id="rightForecast"
+            >
+            </div>
+
+        </div>
+
+    </aside>
+
+
+</div>
+
+
+
+<!-- =========================================================
+     JAVASCRIPT SECTION
+========================================================== -->
+
+<script>
+
+
+    /* =====================================================
+       CHART VARIABLES
+
+       These variables store the Chart.js objects.
+       They are used to destroy the previous chart before
+       creating a new chart when the user searches another city.
+    ====================================================== */
+
+    let precipitationChart = null;
+
+    let temperatureChart = null;
+
+
+
+    /* =====================================================
+       WEATHER CODE FUNCTION
+
+       Open-Meteo returns a numerical weather code.
+
+       This function converts that numerical code into:
+       1. Weather description
+       2. Weather emoji
+    ====================================================== */
+
+    function weatherInfo(code) {
+
+
+        // Clear sky
+
+        if (code === 0)
+            return ["Clear Sky", "☀️"];
+
+
+        // Mainly clear
+
+        if (code === 1)
+            return ["Mainly Clear", "🌤️"];
+
+
+        // Partly cloudy
+
+        if (code === 2)
+            return ["Partly Cloudy", "⛅"];
+
+
+        // Cloudy
+
+        if (code === 3)
+            return ["Cloudy", "☁️"];
+
+
+        // Fog
+
+        if (code >= 45 && code <= 48)
+            return ["Foggy", "🌫️"];
+
+
+        // Drizzle
+
+        if (code >= 51 && code <= 57)
+            return ["Drizzle", "🌦️"];
+
+
+        // Rain
+
+        if (code >= 61 && code <= 67)
+            return ["Rain", "🌧️"];
+
+
+        // Snow
+
+        if (code >= 71 && code <= 77)
+            return ["Snow", "❄️"];
+
+
+        // Rain showers
+
+        if (code >= 80 && code <= 82)
+            return ["Rain Showers", "🌦️"];
+
+
+        // Thunderstorm
+
+        if (code >= 95)
+            return ["Thunderstorm", "⛈️"];
+
+
+        // Unknown weather code
+
+        return ["Unknown", "🌡️"];
+
+    }
+
+
+
+    /* =====================================================
+       FORMAT TIME
+
+       Converts a time such as:
+
+       2026-09-23T06:15
+
+       into:
+
+       6:15 AM
+    ====================================================== */
+
+    function formatTime(time) {
+
+
+        // Check if time exists
+
+        if (!time)
+            return "--";
+
+
+        // Separate date and time
+
+        let parts =
+            time.split("T");
+
+
+        // Get clock portion
+
+        let clock =
+            parts.length > 1
+            ? parts[1]
+            : time;
+
+
+        // Extract hour and minute
+
+        let [hour, minute] =
+            clock
+            .substring(0,5)
+            .split(":");
+
+
+        // Convert hour into number
+
+        hour =
+            parseInt(hour);
+
+
+        // Determine AM or PM
+
+        let suffix =
+            hour >= 12
+            ? "PM"
+            : "AM";
+
+
+        // Convert 24-hour format to 12-hour format
+
+        let displayHour =
+            hour % 12 || 12;
+
+
+        return `${displayHour}:${minute} ${suffix}`;
+
+    }
+
+
+
+    /* =====================================================
+       CONVERT TIME INTO MINUTES
+
+       Example:
+
+       06:30 = 390 minutes
+
+       This is required for calculating the position of
+       sunrise and sunset on the timeline.
+    ====================================================== */
+
+    function timeToMinutes(time) {
+
+
+        // Extract clock portion
+
+        let clock =
+            time.split("T")[1];
+
+
+        // Separate hour and minute
+
+        let parts =
+            clock
+            .substring(0,5)
+            .split(":");
+
+
+        // Convert into total minutes
+
+        return (
+            parseInt(parts[0]) * 60 +
+            parseInt(parts[1])
+        );
+
+    }
+
+
+
+    /* =====================================================
+       MAIN WEATHER FUNCTION
+
+       This function:
+
+       1. Gets city name from search box
+       2. Finds latitude and longitude
+       3. Gets weather information
+       4. Updates dashboard
+       5. Creates charts
+       6. Updates sunrise/sunset
+    ====================================================== */
+
+    async function loadWeather() {
+
+
+        /* -------------------------------------------------
+           GET CITY FROM SEARCH BOX
+        -------------------------------------------------- */
+
+        const city =
+            document
+            .getElementById("cityInput")
+            .value
+            .trim();
+
+
+        // Check if user entered a city
+
+        if (!city) {
+
+            alert(
+                "Please enter a city or place."
+            );
+
+            return;
+        }
+
+
+
+        try {
+
+
+            /* =================================================
+               STEP 1: GEOCODING API
+
+               Converts city name into:
+               Latitude
+               Longitude
+               Country
+            ================================================== */
+
+            const geoURL =
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(city)}&count=1&language=en&format=json`;
+
+
+            // Send request to geocoding API
+
+            const geoResponse =
+                await fetch(geoURL);
+
+
+            // Convert response to JSON
+
+            const geoData =
+                await geoResponse.json();
+
+
+            // Check whether city exists
+
+            if (
+                !geoData.results ||
+                geoData.results.length === 0
+            ) {
+
+                alert(
+                    "City or place not found."
+                );
+
+                return;
+            }
+
+
+            // Store location information
+
+            const location =
+                geoData.results[0];
+
+
+            // Latitude
+
+            const lat =
+                location.latitude;
+
+
+            // Longitude
+
+            const lon =
+                location.longitude;
+
+
+            // City name
+
+            const placeName =
+                location.name;
+
+
+            // Country
+
+            const country =
+                location.country;
+
+
+
+            /* =================================================
+               STEP 2: WEATHER API
+
+               Open-Meteo provides:
+               - Current weather
+               - Hourly weather
+               - Daily forecast
+               - Sunrise
+               - Sunset
+            ================================================== */
+
+            const weatherURL =
+            `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current=temperature_2m,relative_humidity_2m,apparent_temperature,pressure_msl,visibility,wind_speed_10m,weather_code&hourly=temperature_2m,precipitation&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset&timezone=auto&forecast_days=7`;
+
+
+            // Request weather information
+
+            const response =
+                await fetch(weatherURL);
+
+
+            // Check whether request was successful
+
+            if (!response.ok) {
+
+                throw new Error(
+                    "Weather API request failed."
+                );
+            }
+
+
+            // Convert response to JSON
+
+            const data =
+                await response.json();
+
+
+            // Store current weather
+
+            const current =
+                data.current;
+
+
+
+            /* =================================================
+               STEP 3: UPDATE LOCATION INFORMATION
+            ================================================== */
+
+            document.getElementById(
+                "topLocation"
+            ).innerText =
+                `📍 ${placeName}, ${country}`;
+
+
+            document.getElementById(
+                "heroLocation"
+            ).innerText =
+                `${placeName}, ${country}`;
+
+
+            // Latitude
+
+            document.getElementById(
+                "latitude"
+            ).innerText =
+                lat.toFixed(4);
+
+
+            // Longitude
+
+            document.getElementById(
+                "longitude"
+            ).innerText =
+                lon.toFixed(4);
+
+
+            // Time zone
+
+            document.getElementById(
+                "timezone"
+            ).innerText =
+                data.timezone;
+
+
+            // Weather code
+
+            document.getElementById(
+                "weatherCode"
+            ).innerText =
+                current.weather_code;
+
+
+
+            /* =================================================
+               STEP 4: UPDATE CURRENT WEATHER
+            ================================================== */
+
+
+            // Temperature
+
+            document.getElementById(
+                "temperature"
+            ).innerText =
+                Math.round(
+                    current.temperature_2m
+                ) + "°";
+
+
+            // Feels-like temperature
+
+            document.getElementById(
+                "feels"
+            ).innerText =
+                "Feels like " +
+                Math.round(
+                    current.apparent_temperature
+                ) +
+                "°C";
+
+
+            // Humidity
+
+            document.getElementById(
+                "humidity"
+            ).innerText =
+                current.relative_humidity_2m +
+                "%";
+
+
+            // Wind speed
+
+            document.getElementById(
+                "wind"
+            ).innerText =
+                Math.round(
+                    current.wind_speed_10m
+                ) +
+                " km/h";
+
+
+            // Atmospheric pressure
+
+            document.getElementById(
+                "pressure"
+            ).innerText =
+                Math.round(
+                    current.pressure_msl
+                ) +
+                " hPa";
+
+
+            // Visibility
+
+            document.getElementById(
+                "visibility"
+            ).innerText =
+                (
+                    current.visibility / 1000
+                ).toFixed(1) +
+                " km";
+
+
+
+            /* =================================================
+               STEP 5: UPDATE WEATHER CONDITION
+            ================================================== */
+
+            const info =
+                weatherInfo(
+                    current.weather_code
+                );
+
+
+            // Weather description
+
+            document.getElementById(
+                "condition"
+            ).innerText =
+                info[0];
+
+
+            // Weather emoji
+
+            document.getElementById(
+                "heroIcon"
+            ).innerText =
+                info[1];
+
+
+
+            /* =================================================
+               STEP 6: CREATE 7-DAY FORECAST
+            ================================================== */
+
+            const forecast =
+                document.getElementById(
+                    "forecast"
+                );
+
+
+            const rightForecast =
+                document.getElementById(
+                    "rightForecast"
+                );
+
+
+            // Clear previous forecast
+
+            forecast.innerHTML = "";
+
+            rightForecast.innerHTML = "";
+
+
+            // Loop through seven days
+
+            for (
+                let i = 0;
+                i < data.daily.time.length;
+                i++
+            ) {
+
+
+                // Convert date into JavaScript Date object
+
+                const date =
+                    new Date(
+                        data.daily.time[i] +
+                        "T00:00:00"
+                    );
+
+
+                // Get weekday name
+
+                const day =
+                    date.toLocaleDateString(
+                        "en-IN",
+                        {
+                            weekday:"short"
+                        }
+                    );
+
+
+                // Get date and month
+
+                const dateText =
+                    date.toLocaleDateString(
+                        "en-IN",
+                        {
+                            day:"numeric",
+                            month:"short"
+                        }
+                    );
+
+
+                // Get weather icon and description
+
+                const weather =
+                    weatherInfo(
+                        data.daily.weather_code[i]
+                    );
+
+
+
+                /* ---------------------------------------------
+                   MAIN FORECAST CARDS
+                ---------------------------------------------- */
+
+                forecast.innerHTML += `
+
+                    <div
+                        class="forecast-card
+                        ${i === 0 ? "today" : ""}"
+                    >
+
+                        <div class="forecast-day">
+
+                            ${
+                                i === 0
+                                ? "Today"
+                                : day
+                            }
+
+                        </div>
+
+                        <div class="forecast-date">
+
+                            ${dateText}
+
+                        </div>
+
+                        <div class="forecast-icon">
+
+                            ${weather[1]}
+
+                        </div>
+
+                        <div class="forecast-temp">
+
+                            ${Math.round(
+                                data.daily
+                                .temperature_2m_max[i]
+                            )}°
+
+                        </div>
+
+                        <div class="forecast-min">
+
+                            ${Math.round(
+                                data.daily
+                                .temperature_2m_min[i]
+                            )}°
+
+                        </div>
+
+                    </div>
+
+                `;
+
+
+
+                /* ---------------------------------------------
+                   RIGHT-SIDE FORECAST
+                ---------------------------------------------- */
+
+                rightForecast.innerHTML += `
+
+                    <div class="forecast-row">
+
+                        <div class="forecast-row-icon">
+
+                            ${weather[1]}
+
+                        </div>
+
+                        <div class="forecast-row-info">
+
+                            <strong>
+
+                                ${day},
+                                ${dateText}
+
+                            </strong>
+
+                            <small>
+
+                                ${weather[0]}
+
+                            </small>
+
+                        </div>
+
+                        <div class="forecast-row-temp">
+
+                            ${Math.round(
+                                data.daily
+                                .temperature_2m_max[i]
+                            )}°
+                            /
+                            ${Math.round(
+                                data.daily
+                                .temperature_2m_min[i]
+                            )}°
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }
+
+
+
+            /* =================================================
+               STEP 7: GET TODAY'S HOURLY DATA
+            ================================================== */
+
+            /*
+                We use the first date returned by the API.
+
+                This is better than using the computer's UTC
+                date because Open-Meteo returns data according
+                to the selected location's timezone.
+            */
+
+            const today =
+                data.daily.time[0];
+
+
+            // Arrays for chart data
+
+            let hours = [];
+
+            let precipitation = [];
+
+            let temperatures = [];
+
+
+            // Loop through hourly data
+
+            for (
+                let i = 0;
+                i < data.hourly.time.length;
+                i++
+            ) {
+
+
+                // Select only today's records
+
+                if (
+                    data.hourly.time[i]
+                    .startsWith(today)
+                ) {
+
+
+                    // Store hour
+
+                    hours.push(
+                        data.hourly.time[i]
+                        .substring(11,16)
+                    );
+
+
+                    // Store precipitation
+
+                    precipitation.push(
+                        data.hourly
+                        .precipitation[i]
+                    );
+
+
+                    // Store temperature
+
+                    temperatures.push(
+                        data.hourly
+                        .temperature_2m[i]
+                    );
+
+                }
+
+            }
+
+
+
+            /* =================================================
+               STEP 8: PRECIPITATION BAR CHART
+            ================================================== */
+
+            // Destroy previous chart before creating new one
+
+            if (precipitationChart) {
+
+                precipitationChart.destroy();
+
+            }
+
+
+            // Get canvas
+
+            const precipitationCanvas =
+                document
+                .getElementById(
+                    "precipitationChart"
+                )
+                .getContext("2d");
+
+
+            // Create bar chart
+
+            precipitationChart =
+                new Chart(
+                    precipitationCanvas,
+                    {
+
+                        type:"bar",
+
+                        data: {
+
+                            // X-axis = hours
+
+                            labels: hours,
+
+                            datasets: [
+
+                                {
+
+                                    label:
+                                        "Precipitation",
+
+                                    // Y-axis = precipitation
+
+                                    data:
+                                        precipitation,
+
+                                    backgroundColor:
+                                        "rgba(45,139,255,0.75)",
+
+                                    borderColor:
+                                        "#247cff",
+
+                                    borderWidth:1,
+
+                                    borderRadius:6
+
+                                }
+
+                            ]
+
+                        },
+
+
+                        options: {
+
+                            responsive:true,
+
+                            maintainAspectRatio:false,
+
+
+                            plugins: {
+
+                                // Hide chart legend
+
+                                legend: {
+                                    display:false
+                                },
+
+
+                                // Tooltip shown when user
+                                // hovers over a bar
+
+                                tooltip: {
+
+                                    callbacks: {
+
+                                        label:
+                                        function(context) {
+
+                                            return (
+                                                " " +
+                                                context.raw +
+                                                " mm"
+                                            );
+
+                                        }
+
+                                    }
+
+                                }
+
+                            },
+
+
+                            scales: {
+
+                                x: {
+
+                                    grid: {
+                                        display:false
+                                    },
+
+                                    // Prevent too many
+                                    // hour labels
+
+                                    ticks: {
+
+                                        maxTicksLimit:8
+
+                                    }
+
+                                },
+
+
+                                y: {
+
+                                    beginAtZero:true,
+
+                                    title: {
+
+                                        display:true,
+
+                                        text:
+                                            "Precipitation (mm)"
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                );
+
+
+
+            /* =================================================
+               STEP 9: TEMPERATURE LINE CHART
+            ================================================== */
+
+            // Remove previous temperature chart
+
+            if (temperatureChart) {
+
+                temperatureChart.destroy();
+
+            }
+
+
+            // Get temperature chart canvas
+
+            const temperatureCanvas =
+                document
+                .getElementById(
+                    "temperatureChart"
+                )
+                .getContext("2d");
+
+
+            // Create line chart
+
+            temperatureChart =
+                new Chart(
+                    temperatureCanvas,
+                    {
+
+                        type:"line",
+
+                        data: {
+
+                            labels: hours,
+
+                            datasets: [
+
+                                {
+
+                                    label:
+                                        "Temperature",
+
+                                    data:
+                                        temperatures,
+
+                                    borderColor:
+                                        "#ff7133",
+
+                                    backgroundColor:
+                                        "rgba(255,113,51,0.12)",
+
+                                    fill:true,
+
+                                    // Smooth line
+
+                                    tension:0.4,
+
+                                    pointRadius:3,
+
+                                    pointBackgroundColor:
+                                        "#ff7133"
+
+                                }
+
+                            ]
+
+                        },
+
+
+                        options: {
+
+                            responsive:true,
+
+                            maintainAspectRatio:false,
+
+
+                            plugins: {
+
+                                legend: {
+                                    display:false
+                                },
+
+
+                                // Display temperature
+                                // when hovering
+
+                                tooltip: {
+
+                                    callbacks: {
+
+                                        label:
+                                        function(context) {
+
+                                            return (
+                                                " " +
+                                                context.raw +
+                                                " °C"
+                                            );
+
+                                        }
+
+                                    }
+
+                                }
+
+                            },
+
+
+                            scales: {
+
+                                x: {
+
+                                    grid: {
+                                        display:false
+                                    },
+
+                                    ticks: {
+
+                                        maxTicksLimit:8
+
+                                    }
+
+                                },
+
+
+                                y: {
+
+                                    title: {
+
+                                        display:true,
+
+                                        text:
+                                            "Temperature (°C)"
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                    }
+                );
+
+
+
+            /* =================================================
+               STEP 10: SUNRISE AND SUNSET
+            ================================================== */
+
+            // Get sunrise time
+
+            const sunrise =
+                data.daily.sunrise[0];
+
+
+            // Get sunset time
+
+            const sunset =
+                data.daily.sunset[0];
+
+
+            // Display sunrise
+
+            document.getElementById(
+                "timelineSunrise"
+            ).innerText =
+                formatTime(sunrise);
+
+
+            // Display sunset
+
+            document.getElementById(
+                "timelineSunset"
+            ).innerText =
+                formatTime(sunset);
+
+
+            // Convert sunrise into minutes
+
+            const sunriseMinutes =
+                timeToMinutes(
+                    sunrise
+                );
+
+
+            // Convert sunset into minutes
+
+            const sunsetMinutes =
+                timeToMinutes(
+                    sunset
+                );
+
+
+            /*
+                A full day has:
+
+                24 hours × 60 minutes
+                = 1440 minutes
+            */
+
+
+            // Calculate sunrise position
+
+            const sunrisePosition =
+                (
+                    sunriseMinutes / 1440
+                ) * 100;
+
+
+            // Calculate sunset position
+
+            const sunsetPosition =
+                (
+                    sunsetMinutes / 1440
+                ) * 100;
+
+
+            // Move sunrise marker
+
+            document.getElementById(
+                "sunriseMarker"
+            ).style.left =
+                sunrisePosition + "%";
+
+
+            // Move sunset marker
+
+            document.getElementById(
+                "sunsetMarker"
+            ).style.left =
+                sunsetPosition + "%";
+
+
+            // Move daylight section
+
+            document.getElementById(
+                "daylightBar"
+            ).style.left =
+                sunrisePosition + "%";
+
+
+            // Set daylight width
+
+            document.getElementById(
+                "daylightBar"
+            ).style.width =
+                (
+                    sunsetPosition -
+                    sunrisePosition
+                ) + "%";
+
+
+
+            /* =================================================
+               STEP 11: CALCULATE DAYLIGHT DURATION
+            ================================================== */
+
+            const daylightMinutes =
+                sunsetMinutes -
+                sunriseMinutes;
+
+
+            // Convert minutes into hours
+
+            const dayHours =
+                Math.floor(
+                    daylightMinutes / 60
+                );
+
+
+            // Remaining minutes
+
+            const dayMinutes =
+                daylightMinutes % 60;
+
+
+            // Display daylight duration
+
+            document.getElementById(
+                "timelineDayLength"
+            ).innerText =
+                `${dayHours}h ${dayMinutes}m`;
+
+
+
+            /* =================================================
+               STEP 12: CALCULATE NIGHT DURATION
+            ================================================== */
+
+            const nightMinutes =
+                1440 -
+                daylightMinutes;
+
+
+            // Convert night minutes into hours
+
+            const nightHours =
+                Math.floor(
+                    nightMinutes / 60
+                );
+
+
+            // Remaining night minutes
+
+            const remainingNightMinutes =
+                nightMinutes % 60;
+
+
+            // Display night duration
+
+            document.getElementById(
+                "timelineNightLength"
+            ).innerText =
+                `${nightHours}h ${remainingNightMinutes}m`;
+
+        }
+
+
+        /* =================================================
+           ERROR HANDLING
+
+           If something goes wrong with the API request,
+           the user gets an error message.
+        ================================================== */
+
+        catch(error) {
+
+            console.error(error);
+
+            alert(
+                "Unable to load weather data. Please check your internet connection."
+            );
+
+        }
+
+    }
+
+
+
+    /* =====================================================
+       CREATE CALENDAR
+
+       This function automatically creates the current
+       month's calendar.
+    ====================================================== */
+
+    function createCalendar() {
+
+
+        // Get today's date
+
+        const now =
+            new Date();
+
+
+        // Current year
+
+        const year =
+            now.getFullYear();
+
+
+        // Current month
+
+        const month =
+            now.getMonth();
+
+
+        // Today's date
+
+        const today =
+            now.getDate();
+
+
+        // Display month and year
+
+        document.getElementById(
+            "calendarMonth"
+        ).innerText =
+            now.toLocaleDateString(
+                "en-IN",
+                {
+                    month:"long",
+                    year:"numeric"
+                }
+            );
+
+
+        // Find first weekday of month
+
+        const firstDay =
+            new Date(
+                year,
+                month,
+                1
+            ).getDay();
+
+
+        // Find number of days in month
+
+        const totalDays =
+            new Date(
+                year,
+                month + 1,
+                0
+            ).getDate();
+
+
+        // Calendar container
+
+        const calendar =
+            document.getElementById(
+                "calendar"
+            );
+
+
+        // Clear old calendar
+
+        calendar.innerHTML = "";
+
+
+        // Weekday names
+
+        const names =
+            [
+                "Su",
+                "Mo",
+                "Tu",
+                "We",
+                "Th",
+                "Fr",
+                "Sa"
+            ];
+
+
+        // Add weekday names
+
+        names.forEach(
+            name => {
+
+                calendar.innerHTML +=
+                `
+                    <div
+                        class="calendar-day-name"
+                    >
+                        ${name}
+                    </div>
+                `;
+
+            }
+        );
+
+
+        // Add blank spaces before first day
+
+        for (
+            let i = 0;
+            i < firstDay;
+            i++
+        ) {
+
+            calendar.innerHTML +=
+                `<div></div>`;
+
+        }
+
+
+        // Add all dates
+
+        for (
+            let day = 1;
+            day <= totalDays;
+            day++
+        ) {
+
+            calendar.innerHTML += `
+
+                <div
+                    class="${
+                        day === today
+                        ? "calendar-today"
+                        : ""
+                    }"
+                >
+                    ${day}
+                </div>
+
+            `;
+
+        }
+
+    }
+
+
+
+    /* =====================================================
+       CURRENT DATE AND TIME
+
+       Updates the clock displayed in the right panel.
+    ====================================================== */
+
+    function updateDateTime() {
+
+
+        // Get current date/time
+
+        const now =
+            new Date();
+
+
+        // Display current date
+
+        document.getElementById(
+            "currentDate"
+        ).innerText =
+            now.toLocaleDateString(
+                "en-IN",
+                {
+                    weekday:"long",
+                    day:"numeric",
+                    month:"long",
+                    year:"numeric"
+                }
+            );
+
+
+        // Display current time
+
+        document.getElementById(
+            "currentTime"
+        ).innerText =
+            "🕒 " +
+            now.toLocaleTimeString(
+                "en-IN",
+                {
+                    hour:"2-digit",
+                    minute:"2-digit"
+                }
+            );
+
+    }
+
+
+
+    /* =====================================================
+       ENTER KEY SEARCH
+
+       Allows the user to press Enter instead of clicking
+       the search button.
+    ====================================================== */
+
+    document
+    .getElementById("cityInput")
+    .addEventListener(
+        "keypress",
+        function(event) {
+
+            if (
+                event.key === "Enter"
+            ) {
+
+                loadWeather();
+
+            }
+
+        }
+    );
+
+
+
+    /* =====================================================
+       START DASHBOARD
+    ====================================================== */
+
+    // Create calendar when page loads
+
+    createCalendar();
+
+
+    // Display current date and time
+
+    updateDateTime();
+
+
+    // Update clock every second
+
+    setInterval(
+        updateDateTime,
+        1000
+    );
+
+
+    // Load default weather for Greater Noida
+
+    loadWeather();
+
+
+</script>
+
+
+</body>
+
+</html>
